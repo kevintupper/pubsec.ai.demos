@@ -35,6 +35,9 @@ A production-ready Python package for managing multi-user chat conversations in 
    # Azure OpenAI Configuration
    AZURE_OPENAI_ENDPOINT=<your_azure_openai_endpoint>
    AZURE_OPENAI_KEY=<your_azure_openai_key>
+   AZURE_OPENAI_API_VERSION=<your_azure_openai_api_version>
+   AZURE_OPENAI_DEPLOYMENT_NAME=<your_azure_openai_deployment_name>
+
 
    # General Configuration
    LOGLEVEL=<log_level>  # e.g., DEBUG, INFO, WARNING, ERROR
