@@ -1,0 +1,19 @@
+# requirements.txt
+
+# Azure SDKs
+azure-identity
+azure-core
+azure-cosmos
+
+# OpenAI SDK    
+openai>=1.3.7
+
+# Environment variables
+python-dotenv
+
+# Logging
+logging
+
+# Other Python libraries
+asyncio
+quart
