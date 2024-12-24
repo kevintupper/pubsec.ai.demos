@@ -44,95 +44,82 @@ A production-ready Python package for managing multi-user chat conversations in 
 
 ## Usage Instructions
 
-Below is a minimal usage example illustrating initialization, conversation creation, message addition, and retrieval.
+Below are the steps to use the `conversation_manager` package. You can test the functionality by running the provided examples, which demonstrate both direct integration and API-based usage.
 
-```python
-import asyncio
-from conversation_manager import (
-    ConversationConfig,
-    CosmosDBConversationClient,
-    OpenAIService,
-    ConversationManager,
-)
+---
 
-async def main():
-    # 1. Load config from .env
-    config = ConversationConfig()
-    config.validate()  # raise ValueError if critical env vars are missing
+### 1. Direct Integration Example
 
-    # 2. Set up Cosmos DB client
-    # If AZURE_AUTH_TYPE=keys, pass in AzureKeyCredential(...) 
-    # or if rbac, pass a token credential from azure.identity
-    if config.AZURE_AUTH_TYPE == "keys":
-        from azure.core.credentials import AzureKeyCredential
-        cosmos_credential = AzureKeyCredential("<cosmos-key-here or from env>")
-    else:
-        from azure.identity.aio import DefaultAzureCredential
-        cosmos_credential = DefaultAzureCredential()
+For direct integration with the `ConversationManager` class, refer to the example in:
 
-    cosmos_db_endpoint = f"https://{config.COSMOS_DB_ACCOUNT}.documents.azure.com:443/"
+**File**: `library/examples/conversation_manager_integration_test_direct.py`
 
-    cosmos_client = CosmosDBConversationClient(
-        endpoint=cosmos_db_endpoint,
-        key_or_token_credential=cosmos_credential,
-        database_name=config.COSMOS_DB_DATABASE,
-        container_name=config.COSMOS_DB_CONTAINER
-    )
+This script demonstrates how to:
 
-    # 3. Set up optional Azure OpenAI service
-    if config.AZURE_AUTH_TYPE == "keys":
-        openai_credential = config.OPENAI_API_KEY
-    else:
-        from azure.identity.aio import DefaultAzureCredential
-        openai_credential = DefaultAzureCredential()
+- Initialize the `ConversationManager` with Cosmos DB and Azure OpenAI services.
+- Create a new conversation.
+- Add messages to a conversation.
+- Retrieve conversation details and messages.
+- Rename and delete conversations.
+- Handle edge cases, such as attempting to interact with non-existent conversations.
 
-    openai_service = OpenAIService(
-        endpoint=config.OPENAI_ENDPOINT,
-        api_key_or_token_credential=openai_credential,
-        deployment_name=config.OPENAI_DEPLOYMENT_NAME,
-        api_version=config.OPENAI_API_VERSION
-    )
-    openai_service.create_client()
+Run the script to test the functionality directly without using an API:
 
-    # 4. Create ConversationManager 
-    manager = ConversationManager(cosmos_client, openai_service=openai_service)
-    await manager.initialize()
-
-    # 5. Create a new conversation for a given user
-    user_id = "00000000-0000-0000-0000-000000000000"
-    user_messages = ["Hello, I'd like to discuss sales figures."]
-    new_conv = await manager.create_conversation(user_id, user_messages=user_messages)
-    print("Created conversation:", new_conv)
-
-    # 6. Add messages
-    conversation_id = new_conv["id"]
-    await manager.add_message(conversation_id, user_id, "user", "What are last quarter's numbers?")
-    await manager.add_message(conversation_id, user_id, "assistant", "Last quarter's numbers rose by 15%. [doc1]")
-
-    # 7. Retrieve conversation info and messages
-    conv_info = await manager.get_conversation(conversation_id, user_id)
-    conv_messages = await manager.get_messages(conversation_id, user_id)
-    print("Conversation info:", conv_info)
-    print("Messages:", conv_messages)
-
-    # 8. Cleanup
-    await manager.close()
-
-if __name__ == "__main__":
-    asyncio.run(main())
+```bash
+python library/examples/conversation_manager_integration_test_direct.py
 ```
 
-### Renaming a Conversation
-```python
-Copy code
-await manager.rename_conversation(conversation_id, user_id, "New Title")
-```
+---
 
-### Deleting a Conversation
-```python
-Copy code
-await manager.delete_conversation(conversation_id, user_id)
-```
+### 2. API-Based Integration Example
+
+For API-based usage, refer to the following files:
+
+1. **API Implementation**: `library/examples/conversation_manager_api.py`  
+   This file sets up a RESTful API using the `Quart` framework. It exposes endpoints for creating, retrieving, updating, and deleting conversations and messages.
+
+   To start the API server, run:
+
+   ```bash
+   python library/examples/conversation_manager_api.py
+   ```
+
+   The API will be available at `http://0.0.0.0:8000`.
+
+2. **API Integration Test**: `library/examples/conversation_manager_integration_test_api.py`  
+   This script demonstrates how to interact with the API using `httpx`. It covers the same operations as the direct integration example but communicates with the API instead of directly calling the `ConversationManager` class.
+
+   Run the script to test the API:
+
+   ```bash
+   python library/examples/conversation_manager_integration_test_api.py
+   ```
+
+---
+
+### 3. Key Endpoints in the API
+
+The following endpoints are available in the API:
+
+- **Create a new conversation**: `POST /conversations`
+- **Add a message to a conversation**: `POST /conversations/<conv_id>/messages`
+- **Retrieve messages in a conversation**: `GET /conversations/<conv_id>/messages`
+- **Rename a conversation**: `PUT /conversations/<conv_id>`
+- **Delete a conversation**: `DELETE /conversations/<conv_id>`
+- **List all conversations for a user**: `GET /conversations`
+- **Retrieve a specific conversation**: `GET /conversations/<conv_id>`
+
+Refer to the `conversation_manager_api.py` file for detailed implementation.
+
+---
+
+### Testing and Validation
+
+- Ensure your `.env` file is correctly configured with all required environment variables before running the examples.
+- Use the direct integration example to validate the core functionality of the `ConversationManager` class.
+- Use the API example to test the RESTful interface and integration with external clients.
+
+---
 
 ## Integration
 
