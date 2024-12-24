@@ -1,4 +1,0 @@
-# requirements.txt
-
-python-dotenv
-pydantic-ai[openai,logfire]
