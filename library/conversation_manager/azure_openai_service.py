@@ -5,7 +5,8 @@ Provides a wrapper around Azure OpenAI to generate conversation titles or other 
 """
 
 import logging
-from typing import List
+from typing import List, Optional
+
 from openai import AsyncAzureOpenAI
 from .config import ConversationConfig
 
@@ -16,19 +17,19 @@ class AzureOpenAIService:
     Example usage: generate a short conversation title from conversation context.
     """
 
-    def __init__(self, config: ConversationConfig):
+    def __init__(self, config: ConversationConfig) -> None:
         """
         Args:
             config (ConversationConfig): Configuration object with Azure OpenAI and logging settings.
         """
         # Load configuration
-        self.endpoint = config.AZURE_OPENAI_ENDPOINT
-        self.api_key = config.AZURE_OPENAI_API_KEY
-        self.deployment_name = config.AZURE_OPENAI_DEPLOYMENT_NAME
-        self.api_version = config.AZURE_OPENAI_API_VERSION
+        self.endpoint: str = config.AZURE_OPENAI_ENDPOINT
+        self.api_key: str = config.AZURE_OPENAI_API_KEY
+        self.deployment_name: str = config.AZURE_OPENAI_DEPLOYMENT_NAME
+        self.api_version: str = config.AZURE_OPENAI_API_VERSION
 
         # Configure logging
-        self.logger = logging.getLogger(__name__)
+        self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.setLevel(config.LOGLEVEL)  # Set logging level dynamically
 
         # Dynamically set Azure SDK logging levels based on config
@@ -37,7 +38,7 @@ class AzureOpenAIService:
             logging.getLogger("openai").setLevel(logging.WARNING)
 
         # Initialize the client during __init__
-        self._client = None
+        self._client: Optional[AsyncAzureOpenAI] = None
         self.logger.info("Initializing Azure OpenAI client...")
         try:
             self._client = AsyncAzureOpenAI(
@@ -55,6 +56,12 @@ class AzureOpenAIService:
         """
         Creates a short conversation title from the user messages.
         This is a simplistic example. You can expand the logic as needed.
+
+        Args:
+            user_messages (List[str]): A list of user messages.
+
+        Returns:
+            str: A short conversation title.
         """
         self.logger.info("Generating conversation title...")
         self.logger.debug("User messages: %s", user_messages)
@@ -63,14 +70,14 @@ class AzureOpenAIService:
             self.logger.error("OpenAIService client not initialized.")
             raise RuntimeError("OpenAIService client not initialized.")
 
-        system_prompt = (
+        system_prompt: str = (
             "You are a system that provides short, concise chat conversation titles. "
             "Take the user's messages and produce a 4-word max title. No punctuation. "
             "No quotes. If insufficient context, output 'New Chat'."
         )
 
         # Prepare messages for the OpenAI API
-        messages = [{"role": "system", "content": system_prompt}]
+        messages: List[dict] = [{"role": "system", "content": system_prompt}]
         for msg in user_messages:
             messages.append({"role": "user", "content": msg})
 
@@ -86,7 +93,7 @@ class AzureOpenAIService:
             self.logger.debug("OpenAI API response: %s", completion)
 
             if completion and completion.choices:
-                raw_title = completion.choices[0].message.content.strip()
+                raw_title: str = completion.choices[0].message.content.strip()
                 self.logger.info("Generated conversation title: %s", raw_title)
                 return raw_title
 
@@ -97,7 +104,7 @@ class AzureOpenAIService:
             self.logger.debug("Exception details:", exc_info=True)
             return "Chat"
 
-    async def close(self):
+    async def close(self) -> None:
         """
         Closes the underlying client session.
         """

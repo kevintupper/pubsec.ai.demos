@@ -9,6 +9,7 @@ from azure.cosmos.aio import CosmosClient
 from azure.cosmos import PartitionKey
 from azure.cosmos.exceptions import CosmosHttpResponseError, CosmosResourceNotFoundError
 from .config import ConversationConfig
+from typing import Optional, List, Dict, Any
 
 # Configure logging for your application
 logging.basicConfig(level=logging.INFO)  # Set the default logging level for your app
@@ -47,7 +48,7 @@ class CosmosDBConversationClient:
             logging.getLogger("azure.core").setLevel(logging.WARNING)
             logging.getLogger("azure.cosmos").setLevel(logging.WARNING)
 
-    async def connect(self):
+    async def connect(self) -> None:
         """
         Initializes CosmosClient and ensures the database and container exist.
         This must be called before any CRUD operations.
@@ -62,7 +63,7 @@ class CosmosDBConversationClient:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def close(self):
+    async def close(self) -> None:
         """
         Closes the underlying CosmosClient session.
         """
@@ -70,7 +71,7 @@ class CosmosDBConversationClient:
             await self._client.close()
             self.logger.info("CosmosDB client closed successfully.")
 
-    async def ensure_database_and_container(self):
+    async def ensure_database_and_container(self) -> None:
         """
         Ensures the Cosmos DB database and container exist. Creates them if they do not.
         """
@@ -91,7 +92,7 @@ class CosmosDBConversationClient:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def create_conversation(self, conversation_id: str, user_id: str, title: str = ""):
+    async def create_conversation(self, conversation_id: str, user_id: str, title: str = "") -> Dict[str, Any]:
         """
         Creates a new conversation record in Cosmos DB.
         """
@@ -110,7 +111,7 @@ class CosmosDBConversationClient:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def get_conversation(self, conversation_id: str, user_id: str):
+    async def get_conversation(self, conversation_id: str, user_id: str) -> Optional[Dict[str, Any]]:
         """
         Retrieves conversation from Cosmos DB if it belongs to the user.
         """
@@ -125,13 +126,13 @@ class CosmosDBConversationClient:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def upsert_conversation(self, conversation_item: dict):
+    async def upsert_conversation(self, conversation_item: Dict[str, Any]) -> Dict[str, Any]:
         """
         Updates or inserts conversation item. Must include correct 'id' and 'entra_oid' partition key.
         """
         return await self._container.upsert_item(conversation_item)
 
-    async def delete_conversation(self, conversation_id: str, user_id: str):
+    async def delete_conversation(self, conversation_id: str, user_id: str) -> bool:
         """
         Deletes conversation for the user.
         """
@@ -145,7 +146,7 @@ class CosmosDBConversationClient:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def get_conversations(self, user_id: str, limit: int = 25, offset: int = 0):
+    async def get_conversations(self, user_id: str, limit: int = 25, offset: int = 0) -> List[Dict[str, Any]]:
         """
         Queries user conversations, sorted by timestamp.
         """
@@ -174,7 +175,9 @@ class CosmosDBConversationClient:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def create_message(self, conversation_id: str, user_id: str, message_id: str, role: str, content: str):
+    async def create_message(
+        self, conversation_id: str, user_id: str, message_id: str, role: str, content: str
+    ) -> Dict[str, Any]:
         """
         Persists a single message within a conversation.
         """
@@ -195,7 +198,7 @@ class CosmosDBConversationClient:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def get_messages(self, conversation_id: str, user_id: str, limit: int = 100):
+    async def get_messages(self, conversation_id: str, user_id: str, limit: int = 100) -> List[Dict[str, Any]]:
         """
         Retrieve messages associated with the conversation, sorted by creation order.
         """
@@ -216,7 +219,7 @@ class CosmosDBConversationClient:
             results.append(item)
         return results
 
-    async def delete_messages(self, conversation_id: str, user_id: str):
+    async def delete_messages(self, conversation_id: str, user_id: str) -> bool:
         """
         Removes all messages for a conversation.
         """

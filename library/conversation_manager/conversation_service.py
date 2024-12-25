@@ -7,7 +7,7 @@ combining CosmosDBConversationClient with OpenAIService for optional title gener
 
 import logging
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Any, Dict, Coroutine
 from .cosmos_db_service import CosmosDBConversationClient
 from .azure_openai_service import AzureOpenAIService
 
@@ -22,7 +22,7 @@ class ConversationManager:
         self.azure_openai_service = azure_openai_service
         self.logger = logging.getLogger(__name__)
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """
         Call this once before performing operations. Connects to Cosmos DB.
         """
@@ -35,7 +35,7 @@ class ConversationManager:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def close(self):
+    async def close(self) -> None:
         """
         Closes underlying connections (Cosmos DB, Azure OpenAI, etc.).
         """
@@ -50,7 +50,7 @@ class ConversationManager:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def create_conversation(self, user_id: str, user_messages: Optional[List[str]] = None) -> dict:
+    async def create_conversation(self, user_id: str, user_messages: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Creates a new conversation doc. Optionally generates a conversation title using Azure OpenAI.
         """
@@ -82,7 +82,7 @@ class ConversationManager:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def rename_conversation(self, conversation_id: str, user_id: str, new_title: str):
+    async def rename_conversation(self, conversation_id: str, user_id: str, new_title: str) -> Dict[str, Any]:
         """
         Allows the user to rename an existing conversation.
         """
@@ -102,7 +102,7 @@ class ConversationManager:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def get_conversation(self, conversation_id: str, user_id: str) -> dict:
+    async def get_conversation(self, conversation_id: str, user_id: str) -> Optional[Dict[str, Any]]:
         """
         Retrieves conversation record. If not found, returns None.
         """
@@ -119,7 +119,7 @@ class ConversationManager:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def list_conversations(self, user_id: str, limit: int = 25, offset: int = 0) -> List[dict]:
+    async def list_conversations(self, user_id: str, limit: int = 25, offset: int = 0) -> List[Dict[str, Any]]:
         """
         Returns a list of conversation docs for the user.
         """
@@ -134,7 +134,7 @@ class ConversationManager:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def delete_conversation(self, conversation_id: str, user_id: str):
+    async def delete_conversation(self, conversation_id: str, user_id: str) -> bool:
         """
         Deletes the conversation and all of its messages for the user.
         """
@@ -149,7 +149,7 @@ class ConversationManager:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def add_message(self, conversation_id: str, user_id: str, role: str, content: str) -> dict:
+    async def add_message(self, conversation_id: str, user_id: str, role: str, content: str) -> Dict[str, Any]:
         """
         Adds a message to an existing conversation doc.
         """
@@ -170,7 +170,7 @@ class ConversationManager:
             self.logger.debug("Exception details:", exc_info=True)
             raise
 
-    async def get_messages(self, conversation_id: str, user_id: str, limit: int = 100):
+    async def get_messages(self, conversation_id: str, user_id: str, limit: int = 100) -> List[Dict[str, Any]]:
         """
         Returns messages for a specific conversation, in ascending time order.
         """

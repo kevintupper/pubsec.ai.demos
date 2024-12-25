@@ -1,24 +1,25 @@
 import asyncio
 import httpx
+from typing import List, Dict, Any
 
-API_BASE_URL = "http://0.0.0.0:8000"  # Base URL of the running API
+API_BASE_URL: str = "http://0.0.0.0:8000"  # Base URL of the running API
 
-async def main():
+async def main() -> None:
     async with httpx.AsyncClient() as client:
         # 1. Create a new conversation
-        user_id = "00000000-0000-0000-0000-000000000000"
-        user_messages = ["Hello, I'd like to discuss sales figures."]
-        response = await client.post(
+        user_id: str = "00000000-0000-0000-0000-000000000000"
+        user_messages: List[str] = ["Hello, I'd like to discuss sales figures."]
+        response: httpx.Response = await client.post(
             f"{API_BASE_URL}/conversations",
             json={"user_id": user_id, "messages": user_messages},
         )
         assert response.status_code == 201, f"Failed to create conversation: {response.text}"
-        new_conv = response.json()
+        new_conv: Dict[str, Any] = response.json()
         print("Created conversation:", new_conv)
         print("\n\n")
 
         # Extract conversation ID
-        conversation_id = new_conv["id"]
+        conversation_id: str = new_conv["id"]
 
         # 2. Add messages to the conversation
         response = await client.post(
@@ -41,7 +42,7 @@ async def main():
             params={"user_id": user_id},
         )
         assert response.status_code == 200, f"Failed to retrieve conversation info: {response.text}"
-        conv_info = response.json()
+        conv_info: Dict[str, Any] = response.json()
         print("Conversation info:", conv_info)
         print("\n\n")
         # 4. Retrieve messages
@@ -50,18 +51,18 @@ async def main():
             params={"user_id": user_id},
         )
         assert response.status_code == 200, f"Failed to retrieve messages: {response.text}"
-        conv_messages = response.json()
+        conv_messages: List[Dict[str, Any]] = response.json()
         print("Messages:", conv_messages)
         print("\n\n")
 
         # 5. Rename the conversation
-        new_title = "Sales Discussion"
+        new_title: str = "Sales Discussion"
         response = await client.put(
             f"{API_BASE_URL}/conversations/{conversation_id}",
             json={"user_id": user_id, "new_title": new_title},
         )
         assert response.status_code == 200, f"Failed to rename conversation: {response.text}"
-        updated_conv = response.json()
+        updated_conv: Dict[str, Any] = response.json()
         print("Renamed conversation:", updated_conv)
         print("\n\n")
 
@@ -71,7 +72,7 @@ async def main():
             params={"user_id": user_id, "limit": 10, "offset": 0},
         )
         assert response.status_code == 200, f"Failed to list conversations: {response.text}"
-        conversations = response.json()
+        conversations: List[Dict[str, Any]] = response.json()
         print("List of conversations:", conversations)
         print("\n\n")
 

@@ -15,55 +15,58 @@ from conversation_manager import (
     AzureOpenAIService,
     ConversationManager,
 )
+from typing import List, Dict, Optional
 
-async def main():
+async def main() -> None:
     # 1. Load config from .env
-    config = ConversationConfig()
+    config: ConversationConfig = ConversationConfig()
     config.validate()  # Raise ValueError if critical env vars are missing
 
     # 2. Set up Cosmos DB client
-    cosmos_client = CosmosDBConversationClient(config)
+    cosmos_client: CosmosDBConversationClient = CosmosDBConversationClient(config)
     await cosmos_client.connect()  # Ensure database and container exist
 
     # 3. Set up Azure OpenAI service
-    azure_openai_service = AzureOpenAIService(config)  # Pass the config directly
+    azure_openai_service: AzureOpenAIService = AzureOpenAIService(config)  # Pass the config directly
 
     # 4. Create ConversationManager
-    manager = ConversationManager(cosmos_client=cosmos_client, azure_openai_service=azure_openai_service)
+    manager: ConversationManager = ConversationManager(
+        cosmos_client=cosmos_client, azure_openai_service=azure_openai_service
+    )
     await manager.initialize()
 
     try:
         # Test 1: Create a new conversation
-        user_id = "00000000-0000-0000-0000-000000000000"
-        user_messages = ["Hello, I'd like to discuss sales figures."]
-        new_conv = await manager.create_conversation(user_id, user_messages=user_messages)
+        user_id: str = "00000000-0000-0000-0000-000000000000"
+        user_messages: List[str] = ["Hello, I'd like to discuss sales figures."]
+        new_conv: Dict[str, str] = await manager.create_conversation(user_id, user_messages=user_messages)
         print("Created conversation:", new_conv)
         print("\n\n")
 
         # Test 2: Add messages to the conversation
-        conversation_id = new_conv["id"]
+        conversation_id: str = new_conv["id"]
         await manager.add_message(conversation_id, user_id, "user", "What are last quarter's numbers?")
         await manager.add_message(conversation_id, user_id, "assistant", "Last quarter's numbers rose by 15%. [doc1]")
         print("\n\n")
 
         # Test 3: Retrieve conversation info
-        conv_info = await manager.get_conversation(conversation_id, user_id)
+        conv_info: Optional[Dict[str, str]] = await manager.get_conversation(conversation_id, user_id)
         print("Conversation info:", conv_info)
         print("\n\n")
 
         # Test 4: Retrieve messages
-        conv_messages = await manager.get_messages(conversation_id, user_id)
+        conv_messages: List[Dict[str, str]] = await manager.get_messages(conversation_id, user_id)
         print("Messages:", conv_messages)
         print("\n\n")
 
         # Test 5: Rename the conversation
-        new_title = "Sales Discussion"
-        updated_conv = await manager.rename_conversation(conversation_id, user_id, new_title)
+        new_title: str = "Sales Discussion"
+        updated_conv: Dict[str, str] = await manager.rename_conversation(conversation_id, user_id, new_title)
         print("Renamed conversation:", updated_conv)
         print("\n\n")
 
         # Test 6: List all conversations for the user
-        conversations = await manager.list_conversations(user_id, limit=10, offset=0)
+        conversations: List[Dict[str, str]] = await manager.list_conversations(user_id, limit=10, offset=0)
         print("List of conversations:", conversations)
         print("\n\n")
 
@@ -73,7 +76,7 @@ async def main():
         print("\n\n")
 
         # Test 8: Edge case - Try to retrieve a deleted conversation
-        deleted_conv = await manager.get_conversation(conversation_id, user_id)
+        deleted_conv: Optional[Dict[str, str]] = await manager.get_conversation(conversation_id, user_id)
         print("Deleted conversation retrieval (should be None):", deleted_conv)
         print("\n\n")
 
